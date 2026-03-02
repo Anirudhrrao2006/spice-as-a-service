@@ -2,59 +2,456 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spice-as-a-Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; background-color: #1e1e1e; color: #fff; }
-        h1 { color: #61dafb; }
-        textarea { width: 100%; height: 250px; font-family: 'Courier New', Courier, monospace; font-size: 16px; padding: 10px; background-color: #2d2d2d; color: #d4d4d4; border: 1px solid #444; border-radius: 5px; }
-        button { padding: 12px 24px; font-size: 16px; font-weight: bold; background-color: #007acc; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; }
-        button:hover { background-color: #005f9e; }
-        pre { background: #000; color: #00ff00; padding: 20px; overflow-x: auto; border-radius: 5px; margin-top: 20px; font-size: 15px; }
+        :root {
+            --bg: #080c10;
+            --surface: #0d1117;
+            --panel: #111820;
+            --border: rgba(0, 220, 180, 0.15);
+            --glow: #00dcb4;
+            --glow-dim: rgba(0, 220, 180, 0.4);
+            --amber: #f5a623;
+            --amber-dim: rgba(245, 166, 35, 0.3);
+            --red: #ff4560;
+            --text: #c8d8e8;
+            --text-dim: #5a7a8a;
+            --mono: 'Share Tech Mono', monospace;
+            --display: 'Orbitron', sans-serif;
+            --body: 'Rajdhani', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: var(--body);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 220, 180, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 220, 180, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .wrapper {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 24px 60px;
+        }
+
+        header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-tag {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--glow);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        h1 {
+            font-family: var(--display);
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 900;
+            letter-spacing: 2px;
+            line-height: 1;
+            color: #fff;
+            text-shadow: 0 0 40px var(--glow-dim);
+        }
+
+        h1 span { color: var(--glow); }
+
+        .header-meta {
+            text-align: right;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+            line-height: 2.2;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--glow);
+            box-shadow: 0 0 8px var(--glow);
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--glow), transparent);
+            opacity: 0.5;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+        }
+
+        .panel-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--glow);
+        }
+
+        .panel-badge {
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 3px 8px;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .panel-body { padding: 18px; }
+
+        .corner-tl, .corner-br {
+            position: absolute;
+            width: 12px; height: 12px;
+            border-color: var(--glow);
+            border-style: solid;
+            opacity: 0.4;
+        }
+        .corner-tl { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+        .corner-br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: #05080b;
+            color: #a8d8c0;
+            border: 1px solid rgba(0, 220, 180, 0.1);
+            border-radius: 3px;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 1.7;
+            padding: 14px 16px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s;
+            caret-color: var(--glow);
+        }
+
+        textarea:focus {
+            border-color: var(--glow-dim);
+            box-shadow: 0 0 0 1px var(--glow-dim), inset 0 0 20px rgba(0, 220, 180, 0.03);
+        }
+
+        .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .run-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 36px;
+            font-family: var(--display);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--bg);
+            background: var(--glow);
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+        .run-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.4s;
+        }
+
+        .run-btn:hover::before { transform: translateX(100%); }
+        .run-btn:hover {
+            box-shadow: 0 0 30px var(--glow-dim), 0 0 60px rgba(0, 220, 180, 0.15);
+            transform: translateY(-1px);
+        }
+        .run-btn:active { transform: translateY(0); }
+        .run-btn.loading { background: var(--amber); pointer-events: none; }
+
+        .btn-secondary {
+            padding: 14px 24px;
+            font-family: var(--mono);
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--glow-dim);
+            color: var(--glow);
+        }
+
+        .status-bar {
+            margin-left: auto;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--text-dim);
+            letter-spacing: 1px;
+        }
+
+        .output-area {
+            background: #020407;
+            min-height: 240px;
+            max-height: 480px;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: var(--mono);
+            font-size: 13px;
+            line-height: 1.8;
+            white-space: pre;
+        }
+
+        .output-area::-webkit-scrollbar { width: 6px; }
+        .output-area::-webkit-scrollbar-track { background: transparent; }
+        .output-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .output-ready { color: #00ff88; }
+        .output-error { color: var(--red); }
+        .output-warn  { color: var(--amber); }
+        .output-placeholder { color: var(--text-dim); opacity: 0.5; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(0,0,0,0.3);
+            border-top-color: var(--bg);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+        .cursor { animation: blink 1s step-end infinite; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        header { animation: fadeUp 0.4s ease both; }
+        .panel-netlist { animation: fadeUp 0.4s 0.1s ease both; }
+        .controls-row { animation: fadeUp 0.4s 0.2s ease both; }
+        .panel-output { animation: fadeUp 0.4s 0.3s ease both; }
     </style>
 </head>
 <body>
-    <h1>Spice-as-a-Service Dashboard</h1>
-    <p>Type your SPICE netlist below (no weird formatting needed!):</p>
-    
-    <textarea id="netlistInput">NMOS DC Bias Test
+    <div class="wrapper">
+        <header>
+            <div class="logo-area">
+                <div class="logo-tag">// CIRCUIT SIMULATION ENGINE v2.1</div>
+                <h1>SPICE<span>-AS-A-</span>SERVICE</h1>
+            </div>
+            <div class="header-meta">
+                <div><span class="status-dot"></span>NGSPICE READY</div>
+                <div>ENDPOINT&nbsp;&nbsp;127.0.0.1:8000</div>
+                <div>PROTOCOL&nbsp;HTTP / REST</div>
+            </div>
+        </header>
+
+        <div class="main-grid">
+
+            <div class="panel panel-netlist">
+                <div class="corner-tl"></div>
+                <div class="corner-br"></div>
+                <div class="panel-header">
+                    <span class="panel-title">▶ NETLIST INPUT</span>
+                    <span class="panel-badge">SPICE 3F5 COMPATIBLE</span>
+                </div>
+                <div class="panel-body">
+                    <textarea id="netlistInput" spellcheck="false">NMOS DC Bias Test
 Vdd d 0 5V
 Vgs g 0 2V
 M1 d g 0 0 my_nmos
 .model my_nmos NMOS (VTO=1.0 KP=0.02)
 .op
 .print dc v(d) v(g) i(Vdd)
-.end</textarea><br>
-    
-    <button onclick="runSimulation()">Run Simulation</button>
+.end</textarea>
+                </div>
+            </div>
 
-    <h2>Ngspice Output:</h2>
-    <pre id="outputArea">Awaiting circuit data...</pre>
+            <div class="controls-row">
+                <button class="run-btn" id="runBtn" onclick="runSimulation()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" style="fill:currentColor"><path d="M3 2l11 6-11 6V2z"/></svg>
+                    <span id="btnLabel">RUN SIMULATION</span>
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">CLEAR</button>
+                <button class="btn-secondary" onclick="loadExample()">LOAD EXAMPLE</button>
+                <div class="status-bar" id="statusBar">READY</div>
+            </div>
+
+            <div class="panel panel-output">
+                <div class="corner-tl"></div>
+                <div class="corner-br"></div>
+                <div class="panel-header">
+                    <span class="panel-title">▶ NGSPICE OUTPUT</span>
+                    <span class="panel-badge" id="outputBadge">AWAITING INPUT</span>
+                </div>
+                <div class="output-area" id="outputArea"><span class="output-placeholder">── Simulation results will appear here <span class="cursor">█</span></span></div>
+            </div>
+
+        </div>
+    </div>
 
     <script>
-        // This Javascript connects the button to your Python API
         async function runSimulation() {
-            const netlist = document.getElementById('netlistInput').value;
+            const netlist = document.getElementById('netlistInput').value.trim();
             const outputArea = document.getElementById('outputArea');
-            outputArea.textContent = "Running simulation in the cloud (locally)...";
+            const runBtn = document.getElementById('runBtn');
+            const btnLabel = document.getElementById('btnLabel');
+            const statusBar = document.getElementById('statusBar');
+            const outputBadge = document.getElementById('outputBadge');
+
+            if (!netlist) {
+                outputArea.innerHTML = '<span class="output-error">⚠ ERROR: No netlist provided.</span>';
+                return;
+            }
+
+            runBtn.classList.add('loading');
+            btnLabel.innerHTML = '<span class="spinner"></span> SIMULATING...';
+            statusBar.textContent = 'RUNNING...';
+            outputBadge.textContent = 'PROCESSING';
+            const t0 = performance.now();
+
+            outputArea.innerHTML = '<span class="output-warn">⟳ Dispatching netlist to ngspice engine...</span>';
 
             try {
-                // Send the data to the Python server we built
                 const response = await fetch('http://127.0.0.1:8000/simulate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ netlist: netlist })
+                    body: JSON.stringify({ netlist })
                 });
 
                 const data = await response.json();
-                
+                const elapsed = ((performance.now() - t0) / 1000).toFixed(3);
+
                 if (response.ok) {
-                    outputArea.textContent = data.output; // Print the green text
+                    const lines = data.output.split('\n');
+                    const html = lines.map(line => {
+                        if (line.match(/error/i)) return `<span class="output-error">${esc(line)}</span>`;
+                        if (line.match(/warning/i)) return `<span class="output-warn">${esc(line)}</span>`;
+                        return `<span class="output-ready">${esc(line)}</span>`;
+                    }).join('\n');
+                    outputArea.innerHTML = html;
+                    statusBar.textContent = `DONE IN ${elapsed}s`;
+                    outputBadge.textContent = `SUCCESS · ${elapsed}s`;
                 } else {
-                    outputArea.textContent = "Error: " + data.detail;
+                    outputArea.innerHTML = `<span class="output-error">✖ ERROR ${response.status}\n${esc(data.detail)}</span>`;
+                    statusBar.textContent = 'FAILED';
+                    outputBadge.textContent = 'ERROR';
                 }
-            } catch (error) {
-                outputArea.textContent = "Failed to connect to the server. Make sure Uvicorn is still running in your terminal!";
+            } catch (err) {
+                outputArea.innerHTML = `<span class="output-error">✖ CONNECTION REFUSED\n\nCould not reach server at 127.0.0.1:8000\nMake sure Uvicorn is running in your terminal.</span>`;
+                statusBar.textContent = 'NO CONNECTION';
+                outputBadge.textContent = 'OFFLINE';
+            } finally {
+                runBtn.classList.remove('loading');
+                btnLabel.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" style="fill:currentColor"><path d="M3 2l11 6-11 6V2z"/></svg> RUN SIMULATION';
             }
+        }
+
+        function clearAll() {
+            document.getElementById('netlistInput').value = '';
+            document.getElementById('outputArea').innerHTML = '<span class="output-placeholder">── Cleared. Enter a netlist and run. <span class="cursor">█</span></span>';
+            document.getElementById('statusBar').textContent = 'READY';
+            document.getElementById('outputBadge').textContent = 'AWAITING INPUT';
+        }
+
+        function loadExample() {
+            document.getElementById('netlistInput').value = `RC Low-Pass Filter AC Sweep
+Vin in 0 AC 1V
+R1 in out 1k
+C1 out 0 1u
+.ac dec 100 1 100k
+.print ac v(out) vp(out)
+.end`;
+        }
+
+        function esc(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         }
     </script>
 </body>
